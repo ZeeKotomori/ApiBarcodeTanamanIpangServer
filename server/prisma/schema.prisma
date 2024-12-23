@@ -14,11 +14,12 @@ datasource db {
 }
 
 model Tanaman {
-  id         Int      @id @default(autoincrement())
-  nama       String   @db.VarChar(100)
-  namaLatin  String?  @db.VarChar(150)
-  khasiat    String?  @db.Text
-  qrCodeUrl  String?  @db.Text
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                  Int       @id @default(autoincrement())
+  nama                String    @db.VarChar(100)
+  namaLatin           String?   @unique @db.VarChar(150)
+  khasiat             Json      
+  bagianYangDigunakan Json      
+  qrCodeUrl           String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
