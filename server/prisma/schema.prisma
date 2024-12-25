@@ -14,12 +14,27 @@ datasource db {
 }
 
 model Tanaman {
-  id                  Int       @id @default(autoincrement())
-  nama                String    @db.VarChar(100)
-  namaLatin           String?   @unique @db.VarChar(150)
-  khasiat             Json      
-  bagianYangDigunakan Json      
-  qrCodeUrl           String?   @db.Text
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                  Int           @id @default(autoincrement())
+  nama                String        @db.VarChar(100)
+  namaLatin           String?       @unique @db.VarChar(150)
+  khasiat             Khasiat[]
+  bagianYangDigunakan Bagian[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  qrUrl               String        @db.VarChar(100)
+  imageUrl            String        @db.VarChar(100)
+}
+
+model Khasiat {
+  id        Int      @id @default(autoincrement())
+  deskripsi String   @db.Text
+  tanaman   Tanaman  @relation(fields: [tanamanId], references: [id], onDelete: Cascade)
+  tanamanId Int
+}
+
+model Bagian {
+  id        Int      @id @default(autoincrement())
+  bagian    String    @db.VarChar(100)
+  tanaman   Tanaman  @relation(fields: [tanamanId], references: [id], onDelete: Cascade)
+  tanamanId Int
 }
