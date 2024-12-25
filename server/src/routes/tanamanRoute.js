@@ -1,5 +1,6 @@
 // src/routes/tanamanRoutes.js
 
+const upload = require('../middleware/uploadMulter.js');
 const express = require('express');
 const tanamanController = require('../controllers/tanamanController.js');
 const router = express.Router();
@@ -11,7 +12,7 @@ router.get('/', tanamanController.getAllTanaman);
 router.get('/:id', tanamanController.getTanamanById);
 
 // Menambahkan tanaman baru
-router.post('/', tanamanController.createTanaman);
+router.post('/', upload.single('file'), tanamanController.createTanaman);
 
 // Mengupdate tanaman berdasarkan id
 router.put('/:id', tanamanController.updateTanaman);
