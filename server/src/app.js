@@ -1,21 +1,30 @@
-// src/app.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
-const path = require('path');
 const tanamanRoutes = require('./routes/tanamanRoute.js');
 const cors = require('cors');
 const qrRoutes = require('./routes/qrRoute.js');
 
+const PORT = process.env.PORT || 3001;
+
 const app = express();
 
-app.use(cors());
-app.use(bodyParser.json());
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send({ message: 'Terjadi kesalahan pada server' });
+});
+
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/public', express.static('public'));
 
 app.use('/api/tanaman', tanamanRoutes);
 app.use('/scan', qrRoutes);
 
-app.listen(3001, () => {
-    console.log('Server berjalan di http://localhost:3001');
+app.listen(PORT, () => {
+    console.log(`Server berjalan di port ${PORT}`);
 });
