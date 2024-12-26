@@ -6,41 +6,42 @@ import AddData from './components/modals/AddData';
 function App() {
    const [tanaman, setTanaman] = useState([]);
    const [isActive, setIsActive] = useState(false);
-   const [isDeleted, setIsDeleted] = useState(false)
+   const [query, setQuery] = useState('');
 
    const openModal = () => setIsActive(true);
    const closeModal = () => setIsActive(false);
 
-   const fetchAPI = async () => {
-      try {
-         await axios
-            .get("http://localhost:3001/api/tanaman")
-            .then((res) => {
-               setTanaman(res.data);
-            })
-      } catch (err) {
-         console.log(err);
-      }
-   };
+   const fetchAPI = (query) => {
+      const url = query ? `http://localhost:3001/api/tanaman/${query}` : "http://localhost:3001/api/tanaman";
+
+      axios
+         .get(url)
+         .then((res) => {
+            setTanaman(Array.isArray(res.data) ? res.data : [res.data]);
+         })
+         .catch((err) => {
+            console.log(err.response.data);
+            setTanaman([]);
+         })
+   }
 
    const handleDelete = (id) => {
       axios
          .delete(`http://localhost:3001/api/tanaman/${id}`)
-         .then((res) => {
+         .then(() => {
             alert('Data Berhasil Dihapus!');
-            setIsDeleted(true);
             fetchAPI();
          })
          .catch((err) => {
-            console.error('Terjadi Kesalahan : ', err);
+            console.error('Terjadi Kesalahan : ', err.response.data);
             alert('Terjadi kesalahan saat menghapus!');
          });
 
    }
 
    useEffect(() => {
-      fetchAPI();
-   }, []);
+      fetchAPI(query);
+   }, [query]);
 
    return (
       <div className="container mt-4">
@@ -48,7 +49,13 @@ function App() {
             <p className="panel-heading">Tanaman Ipang</p>
             <div className="panel-block">
                <p className="control">
-                  <input className="input" type="text" placeholder="Search" />
+                  <input
+                     className="input"
+                     name='search'
+                     value={query}
+                     type="number"
+                     onChange={(e) => setQuery(e.target.value)}
+                     placeholder="Cari berdasarkan Id" />
                </p>
             </div>
             <div className='panel-block'>
@@ -65,16 +72,22 @@ function App() {
                   </tr>
                </thead>
                <tbody>
-                  {tanaman.map((t, index) => (
-                     <tr key={index}>
-                        <td className='is-vcentered'>{t.id}</td>
-                        <td className='is-vcentered'>{t.nama}</td>
-                        <td className='is-vcentered'>{t.namaLatin}</td>
-                        <td className='is-vcentered'>{t.khasiat}</td>
-                        <td><button className="button is-info is-pulled-right">Edit</button></td>
-                        <td><button className="button is-danger" onClick={() => handleDelete(t.id)}>Delete</button></td>
+                  {tanaman.length > 0 ? (
+                     tanaman.map((t, index) => (
+                        <tr key={index}>
+                           <td className='is-vcentered'>{t.id}</td>
+                           <td className='is-vcentered'>{t.nama}</td>
+                           <td className='is-vcentered'>{t.namaLatin}</td>
+                           <td className='is-vcentered'>{t.khasiat}</td>
+                           <td><button className="button is-info is-pulled-right">Edit</button></td>
+                           <td><button className="button is-danger" onClick={() => handleDelete(t.id)}>Delete</button></td>
+                        </tr>
+                     ))
+                  ) : (
+                     <tr>
+                        <td colSpan={5}>Data tidak ditemukan</td>
                      </tr>
-                  ))}
+                  )}
                </tbody>
             </table>
          </nav>
