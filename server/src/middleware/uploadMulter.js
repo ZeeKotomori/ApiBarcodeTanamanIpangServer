@@ -1,36 +1,37 @@
+// uploadMulter.js
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs'); // Tambahkan ini untuk menggunakan modul fs
+
+const ensureDirectoryExists = (dir) => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+};
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = path.join(__dirname, '..', '..', 'public', 'uploads');
-        if (!fs.existsSync(dir)) {
-            try {
-                fs.mkdirSync(dir, { recursive: true });
-            } catch (error) {
-                console.error('Gagal membuat folder:', error.message);
-                return cb(error);
-            }
-        }        
-        cb(null, dir);
+        const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads');
+        ensureDirectoryExists(uploadDir);
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `${uniqueSuffix}-${file.originalname}`);
+        const fileExtension = path.extname(file.originalname);
+        const namaLatin = req.body.namaLatin || path.basename(file.originalname, fileExtension);
+        cb(null, `${namaLatin}${fileExtension}`);
     },
 });
 
 const upload = multer({
-    limits: { fileSize: 10 * 1024 * 1024 }, // Maksimal ukuran file 10MB
+    storage,
     fileFilter: (req, file, cb) => {
-        // Memeriksa ekstensi file yang diterima (misalnya, hanya gambar)
-        if (!file.mimetype.startsWith('image/')) {
-            return cb(new Error('Hanya file gambar yang diperbolehkan'));
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error('Format file tidak didukung'), false);
         }
         cb(null, true);
     },
+    limits: { fileSize: 2 * 1024 * 1024 }, // Maksimal 2MB
 });
-
 
 module.exports = upload;
