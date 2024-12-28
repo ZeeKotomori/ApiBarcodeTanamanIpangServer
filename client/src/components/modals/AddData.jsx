@@ -6,7 +6,8 @@ export default function AddData({ children }) {
    const [formData, setFormData] = useState({
       nama: '',
       namaLatin: '',
-      khasiat: ''
+      khasiat: '',
+      bagianYangDigunakan: '',
    });
 
    const handleChange = (e) => {
@@ -15,6 +16,7 @@ export default function AddData({ children }) {
          ...formData,
          [name]: value,
       });
+      console.log(formData);
    };
 
    const handleSubmit = () => {
@@ -34,13 +36,13 @@ export default function AddData({ children }) {
    return (
       <form className="box" onSubmit={handleSubmit}>
          <div className="field">
-            <label className="label">Nama Tanaman</label>
+            <label className="label">Nama tanaman</label>
             <div className="control">
                <input className="input" type="text" name='nama' value={formData.nama} onChange={handleChange} placeholder="Mawar" />
             </div>
          </div>
          <div className="field">
-            <label className="label">Nama Latin</label>
+            <label className="label">Nama latin</label>
             <div className="control">
                <input className="input" type="text" name='namaLatin' value={formData.namaLatin} onChange={handleChange} placeholder="Rosa" />
             </div>
@@ -49,6 +51,12 @@ export default function AddData({ children }) {
             <label className="label">Khasiat</label>
             <div className="control">
                <input className="input" type="text" name='khasiat' value={formData.khasiat} onChange={handleChange} placeholder="Antiseptik" />
+            </div>
+         </div>
+         <div className="field">
+            <label className="label">Bagian yang digunakan</label>
+            <div className="control">
+               <input className="input" type="text" name='bagianYangDigunakan' value={formData.bagianYangDigunakan} onChange={handleChange} placeholder="Batang" />
             </div>
          </div>
          <button className="button is-primary">Tambah</button>
