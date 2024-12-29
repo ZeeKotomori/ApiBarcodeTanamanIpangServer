@@ -1,17 +1,29 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Bootstrap
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
-export default function AddDataModal() {
+export default function EditDataModal({ id }) {
     const [formData, setFormData] = useState({
         nama: '',
         namaLatin: '',
         khasiat: '',
         bagianYangDigunakan: '',
     });
+
+    useEffect(() => {
+        axios
+            .get(`http://localhost:3001/api/tanaman/${id}`)
+            .then((res) => {
+                setFormData(res.data);
+            })
+            .catch((err) => {
+                console.error('Terjadi Kesalahan : ', err);
+                alert('Terjadi kesalahan saat mengambil data!');
+            });
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -23,7 +35,7 @@ export default function AddDataModal() {
 
     const handleSubmit = () => {
         axios
-            .post("http://localhost:3001/api/tanaman", formData)
+            .put(`http://localhost:3001/api/tanaman/${id}`, formData)
             .then((res) => {
                 console.log('Data berhasil dikirim : ', res.data);
             })
