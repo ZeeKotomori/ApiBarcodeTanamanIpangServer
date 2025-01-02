@@ -9,5 +9,6 @@ router.get('/:id', tanamanController.getTanamanById);
 router.post('/', upload.single('file'), tanamanController.createTanaman);
 router.put('/:id', upload.single('file'), tanamanController.updateTanaman);
 router.delete('/:id', tanamanController.deleteTanaman);
+router.delete('/', tanamanController.deleteMultipleTanaman);
 
 module.exports = router;

@@ -84,8 +84,8 @@ exports.createTanaman = async (req, res) => {
         const fileImageName = `${namaLatin}-${formattedDate}`;
 
         const qrUrl = `${domain}/scan/${namaLatin}`;
-        const imageUrl = `${domain}/public/uploads/${fileImageName}${fileExtension}`;
-        const qrImageUrl = `${domain}/public/qrCodes/qr-${fileImageName}.png`;
+        const imageUrl = `/public/uploads/${fileImageName}${fileExtension}`;
+        const qrImageUrl = `/public/qrCodes/qr-${fileImageName}.png`;
 
         const newTanaman = await prisma.tanaman.create({
             data: {
@@ -158,15 +158,63 @@ exports.updateTanaman = async (req, res) => {
 
 exports.deleteTanaman = async (req, res) => {
     const id = parseInt(req.params.id);
+    
+    const tanaman = await prisma.tanaman.findFirst({ where : { id } });
+    
+    if (tanaman.length === 0) {
+        return res.status(404).send({ message: 'Tidak ditemukan satupun tanaman untuk dihapus' });
+    }
+
     try {
+        
+        if (tanaman.imageUrl && fs.existsSync(path.join(__dirname, '..', '..', tanaman.imageUrl))) {
+            fs.unlinkSync(path.join(__dirname, '..', '..', tanaman.imageUrl));
+        }
+        if (tanaman.qrImageUrl && fs.existsSync(path.join(__dirname, '..', '..', tanaman.qrImageUrl))) {
+            fs.unlinkSync(path.join(__dirname, '..', '..', tanaman.qrImageUrl));
+        }
+        
         await prisma.tanaman.delete({ where: { id } });
+
         res.status(200).send('Tanaman dihapus');
     } catch (error) {
         console.error(error);
-        if (error.code === 'P2025') {
-            res.status(404).send('Tanaman tidak ditemukan');
-        } else {
-            res.status(500).send('Terjadi kesalahan pada server');
-        }
+        res.status(500).send('Terjadi kesalahan pada server');
     }
 };
+
+exports.deleteMultipleTanaman = async (req, res) => {
+    const { ids } = req.body;
+
+    if(!Array.isArray(ids)) {
+        return res.status(400).send({ message: 'IDs harus berupa array' });
+    }
+
+    if(ids.length === 0) {
+        return res.status(400).send({ message: 'IDs tidak boleh kosong' });
+    }
+
+    try {
+        const tanamans = await prisma.tanaman.findMany({ where: { id: { in: ids } } });
+
+        if (tanamans.length === 0) {
+            return res.status(404).send({ message: 'Tidak ditemukan satupun tanaman untuk dihapus' });
+        }
+
+        tanamans.forEach(tanaman => {
+            if (tanaman.imageUrl && fs.existsSync(path.join(__dirname, '..', '..', tanaman.imageUrl))) {
+                fs.unlinkSync(path.join(__dirname, '..', '..', tanaman.imageUrl));
+            }
+            if (tanaman.qrImageUrl && fs.existsSync(path.join(__dirname, '..', '..', tanaman.qrImageUrl))) {
+                fs.unlinkSync(path.join(__dirname, '..', '..', tanaman.qrImageUrl));
+            }
+        });
+
+        await prisma.tanaman.deleteMany({ where: { id: { in: ids } } });
+
+        res.status(200).send({ msg : 'Tanaman berhasil dihapus', deletedTanaman: tanamans });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Terjadi kesalahan pada server');
+    }
+}
