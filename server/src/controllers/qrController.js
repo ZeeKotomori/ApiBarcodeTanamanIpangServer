@@ -5,7 +5,13 @@ exports.qrTanaman = async (req, res) => {
     const namaLatin = req.params.qrTanaman;
 
     try {
-        const tanaman = await prisma.tanaman.findFirst({ where: { namaLatin : namaLatin } });
+        const tanaman = await prisma.tanaman.findFirst({ 
+            where: { namaLatin : namaLatin },
+            include : {
+                khasiat :  true,
+                bagianYangDigunakan : true
+            } 
+        });
         if (tanaman) {
             res.status(200).json(tanaman);
         } else {
