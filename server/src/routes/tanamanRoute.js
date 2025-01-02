@@ -1,5 +1,5 @@
 const express = require('express');
-const upload = require('../middleware/uploadMulter.js');
+const  upload  = require('../middleware/uploadMulter.js');
 const tanamanController = require('../controllers/tanamanController.js');
 
 const router = express.Router();
