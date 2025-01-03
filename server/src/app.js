@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const path = require('path');
 const tanamanRoutes = require('./routes/tanamanRoute.js');
 const qrRoutes = require('./routes/qrRoute.js');
 
@@ -15,7 +15,9 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/public', express.static('public'));
+
+// Set the static folder
+app.use('/public', express.static(path.join(__dirname,'..', 'public')));
 
 app.use('/api/tanaman', tanamanRoutes);
 app.use('/scan', qrRoutes);
@@ -26,5 +28,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server berjalan di port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

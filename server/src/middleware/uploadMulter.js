@@ -1,13 +1,15 @@
-// uploadMulter.js
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // Tambahkan ini untuk menggunakan modul fs
+const fs = require('fs');
 
 const ensureDirectoryExists = (dir) => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 };
+
+const date = new Date();
+const formattedDate = date.toISOString().split('T')[0];
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -18,7 +20,7 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         const fileExtension = path.extname(file.originalname);
         const namaLatin = req.body.namaLatin || path.basename(file.originalname, fileExtension);
-        cb(null, `${namaLatin}${fileExtension}`);
+        cb(null, `${namaLatin}-${formattedDate}${fileExtension}`);
     },
 });
 
