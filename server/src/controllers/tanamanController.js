@@ -22,13 +22,9 @@ exports.getAllTanaman = async (req, res) => {
                 bagianYangDigunakan : true
             }}
         );
-        const jumlahTanaman = tanaman.length;
 
         if (tanaman) {
-            res.status(200).json({
-                jumlahTanaman,
-                data: tanaman,
-            });
+            res.status(200).send({ data : tanaman });
         } else {
             res.status(404).send('Tanaman tidak ditemukan');
         }
@@ -65,7 +61,7 @@ exports.createTanaman = async (req, res) => {
     const { nama, namaLatin, khasiat, bagianYangDigunakan } = req.body;
 
     if (!nama || !namaLatin || !khasiat || !bagianYangDigunakan) {
-        return res.status(400).send({ message: 'Nama, namaLatin, khasiat, dan bagianYangDigunakan harus diisi' });
+        return res.status(400).send('Nama, namaLatin, khasiat, dan bagianYangDigunakan harus diisi');
     }
 
     try {
@@ -74,6 +70,8 @@ exports.createTanaman = async (req, res) => {
         if (findExists) return res.status(400).send("Tanaman sudah terdaftar silahkan melakukan update pada tanaman atau hapus tanaman dan buat baru");
 
         const file = req.file;
+        console.log(file);
+
         if (!file) {
             return res.status(400).send('No file uploaded');
         }
@@ -110,13 +108,21 @@ exports.createTanaman = async (req, res) => {
         res.status(201).send(newTanaman);
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: 'Terjadi kesalahan pada server' });
+        res.status(500).send('Terjadi kesalahan pada server' );
     }
 };
 
 exports.updateTanaman = async (req, res) => {
     const { id } = req.params;
     const { nama, namaLatin, khasiat, bagianYangDigunakan } = req.body;
+
+    if (!namaLatin || !nama || !khasiat || !bagianYangDigunakan) {
+        return res.status(400).send('semua field harus diisi');
+    }
+
+    if (!req.file) {
+        return res.status(400).send('No file uploaded');
+    }
 
     try {
         const existingTanaman = await prisma.tanaman.findUnique({ where: { id: parseInt(id) } });
@@ -125,17 +131,25 @@ exports.updateTanaman = async (req, res) => {
         }
 
         let imageUrl = existingTanaman.imageUrl;
+        let qrImageUrl = existingTanaman.qrImageUrl;
+
         if (req.file) {
             const date = new Date();
             const formattedDate = date.toISOString().split('T')[0];
-            const fileImageName = `${req.file.filename}-${formattedDate}`;
+            const fileExtension = path.extname(req.file.originalname);
+            const fileImageName = `${namaLatin}-${formattedDate}${fileExtension}`;
             const uploadPath = path.join(__dirname, '..', '..', 'public', 'uploads', fileImageName);
-
-            if (imageUrl && fs.existsSync(path.join(__dirname, '..', '..', imageUrl))) {
-                fs.unlinkSync(path.join(__dirname, '..', '..', imageUrl));
-            }
-            imageUrl = `public/uploads/${fileImageName}`;
+        
+            imageUrl = `/public/uploads/${fileImageName}`;
+            qrImageUrl = `/public/qrCodes/qr-${fileImageName}`;
             fs.renameSync(req.file.path, uploadPath);
+
+            if (existingTanaman.imageUrl && fs.existsSync(path.join(__dirname, '..', '..', existingTanaman.imageUrl))) {
+                fs.unlinkSync(path.join(__dirname, '..', '..', existingTanaman.imageUrl));
+            }
+            if (existingTanaman.qrImageUrl && fs.existsSync(path.join(__dirname, '..', '..', existingTanaman.qrImageUrl))) {
+                fs.unlinkSync(path.join(__dirname, '..', '..', existingTanaman.qrImageUrl));
+            }
         }
 
         const updatedTanaman = await prisma.tanaman.update({
@@ -143,8 +157,18 @@ exports.updateTanaman = async (req, res) => {
             data: {
                 nama,
                 namaLatin,
-                khasiat: { update: { deskripsi: khasiat } },
-                bagianYangDigunakan: { update: { bagian: bagianYangDigunakan } },
+                khasiat: {
+                    update: {
+                        where: { id: existingTanaman.id },
+                        data: { deskripsi: khasiat }
+                    }
+                },
+                bagianYangDigunakan: {
+                    update: {
+                        where: { id: existingTanaman.id },
+                        data: { bagian: bagianYangDigunakan }
+                    }
+                },
                 imageUrl,
             },
         });
@@ -162,7 +186,7 @@ exports.deleteTanaman = async (req, res) => {
     const tanaman = await prisma.tanaman.findFirst({ where : { id } });
     
     if (tanaman.length === 0) {
-        return res.status(404).send({ message: 'Tidak ditemukan satupun tanaman untuk dihapus' });
+        return res.status(404).send('Tidak ditemukan satupun tanaman untuk dihapus');
     }
 
     try {
@@ -187,18 +211,18 @@ exports.deleteMultipleTanaman = async (req, res) => {
     const { ids } = req.body;
 
     if(!Array.isArray(ids)) {
-        return res.status(400).send({ message: 'IDs harus berupa array' });
+        return res.status(400).send('IDs harus berupa array');
     }
 
     if(ids.length === 0) {
-        return res.status(400).send({ message: 'IDs tidak boleh kosong' });
+        return res.status(400).send('IDs tidak boleh kosong');
     }
 
     try {
         const tanamans = await prisma.tanaman.findMany({ where: { id: { in: ids } } });
 
         if (tanamans.length === 0) {
-            return res.status(404).send({ message: 'Tidak ditemukan satupun tanaman untuk dihapus' });
+            return res.status(404).send('Tidak ditemukan satupun tanaman untuk dihapus');
         }
 
         tanamans.forEach(tanaman => {
