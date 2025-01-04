@@ -39,3 +39,18 @@ model Bagian {
   tanaman   Tanaman  @relation(fields: [tanamanId], references: [id], onDelete: Cascade)
   tanamanId Int
 }
+
+model User {
+  id        String    @id @default(uuid())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum Role {
+  ADMIN
+  USER
+}

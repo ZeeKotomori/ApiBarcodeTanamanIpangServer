@@ -1,8 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
 const tanamanRoutes = require('./routes/tanamanRoute.js');
 const qrRoutes = require('./routes/qrRoute.js');
+const adminRoutes = require('./routes/userRoute.js');
+const authRoutes = require('./routes/authRoute.js');
+
+const dotenv = require('dotenv');
+dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 
@@ -16,11 +22,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Set the static folder
 app.use('/public', express.static(path.join(__dirname,'..', 'public')));
 
 app.use('/api/tanaman', tanamanRoutes);
 app.use('/scan', qrRoutes);
+app.use('/admin', adminRoutes);
+app.use('/', authRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
