@@ -14,6 +14,7 @@ const handleUpload = (req, res, next) => {
 };
 
 router.get('/', tanamanController.getAllTanaman);
+router.get('/search', tanamanController.searchTanaman);
 router.get('/:id', tanamanController.getTanamanById);
 router.post('/', handleUpload, tanamanController.createTanaman);
 router.put('/:id', handleUpload, tanamanController.updateTanaman);
