@@ -24,7 +24,7 @@ exports.getAllTanaman = async (req, res) => {
         );
 
         if (tanaman) {
-            res.status(200).send({ data : tanaman });
+            res.status(200).send(tanaman);
         } else {
             res.status(404).send('Tanaman tidak ditemukan');
         }
@@ -47,6 +47,38 @@ exports.getTanamanById = async (req, res) => {
         );
 
         if (tanaman) {
+            res.status(200).send(tanaman);
+        } else {
+            res.status(404).send('Tanaman tidak ditemukan');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Terjadi kesalahan pada server');
+    }
+};
+
+exports.searchTanaman = async (req, res) => {
+    const { nama, namaLatin } = req.query;
+
+    if (!nama && !namaLatin) {
+        return res.status(400).send('Parameter nama atau namaLatin harus diisi');
+    }
+
+    try {
+        const tanaman = await prisma.tanaman.findMany({
+            where: {
+                OR: [
+                    { nama: { contains: nama } },
+                    { namaLatin: { contains: namaLatin } }
+                ]
+            },
+            include: {
+                khasiat: true,
+                bagianYangDigunakan: true
+            }
+        });
+
+        if (tanaman.length > 0) {
             res.status(200).json(tanaman);
         } else {
             res.status(404).send('Tanaman tidak ditemukan');
@@ -170,6 +202,7 @@ exports.updateTanaman = async (req, res) => {
                     }
                 },
                 imageUrl,
+                qrImageUrl,
             },
         });
 
