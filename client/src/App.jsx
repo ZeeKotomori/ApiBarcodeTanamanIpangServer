@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import ModalCenter from './components/modals/Modal'
-import AddDataModal from './components/modals/AddData';
-import EditDataModal from './components/modals/EditData';
+import ModalCenter from './components/modals/ModalCenter'
+import AddDataModal from './components/modals/AddDataModal';
+import EditDataModal from './components/modals/EditDataModal';
+import DetailModal from './components/modals/DetailModal';
 
 // Bootstrap
 import './styles/scss/custom.scss';
@@ -17,28 +18,28 @@ import Table from 'react-bootstrap/Table';
 function App() {
    const [tanaman, setTanaman] = useState([]);
    const [Id, setId] = useState('');
-   const [showModal, setShowModal] = useState(false);
+   const [showModal, setShowModal] = useState(null);
    const [modalType, setModalType] = useState("");
    const [query, setQuery] = useState('');
 
-   const handleShowModal = (type, id) => {
-      id && setId(id);
+   const handleShowModal = (idModal, type, idData) => {
+      idData && setId(idData);
       setModalType(type);
-      setShowModal(true);
+      setShowModal(idModal);
    }
 
    const handleCloseModal = () => {
-      setModalType('');
       setShowModal(false);
    }
 
-   const fetchAPI = (query) => {
-      const url = query ? `http://localhost:3001/api/tanaman/${query}` : "http://localhost:3001/api/tanaman";
+   const fetchAPI = async (query) => {
+      const urls = query ? `${import.meta.env.VITE_API_URL}/api/tanaman/${query}` : `${import.meta.env.VITE_API_URL}/api/tanaman`;
 
-      axios
-         .get(url)
+      await axios
+         .get(urls)
          .then((res) => {
-            setTanaman(Array.isArray(res.data) ? res.data : [res.data]);
+            console.log(res.data.data);
+            setTanaman(Array.isArray(res.data.data) ? res.data.data : [res.data.data]);
          })
          .catch((err) => {
             console.log(err.response.data);
@@ -48,7 +49,7 @@ function App() {
 
    const handleDelete = (id) => {
       axios
-         .delete(`http://localhost:3001/api/tanaman/${id}`)
+         .delete(`${import.meta.env.VITE_API_URL}/api/tanaman/${id}`)
          .then(() => {
             alert('Data Berhasil Dihapus!');
             fetchAPI();
@@ -67,7 +68,7 @@ function App() {
    return (
       <Container fluid="lg" className='pt-4'>
          <Navbar className="bg-white rounded">
-            <Container>
+            <Container fluid="lg">
                <Navbar.Brand href="#">Tanaman Ipang</Navbar.Brand>
                <Navbar.Collapse className="justify-content-end">
                   <Navbar.Text>
@@ -84,10 +85,10 @@ function App() {
          <Row className='mt-4'>
             <Form as={Col} xs={4}>
                <Form.Control
-                  placeholder="Cari berdasarkan Id"
+                  placeholder="Cari Tanaman"
                   name='search'
                   value={query}
-                  type="number"
+                  type="search"
                   onChange={(e) => setQuery(e.target.value)}
                />
             </Form>
@@ -97,13 +98,13 @@ function App() {
                </Button>
             </Col>
             <Col xs='auto'>
-               <Button variant='primary' onClick={() => handleShowModal('Tambah Data')}>
+               <Button variant='primary' onClick={() => handleShowModal('data', 'Tambah Data')}>
                   Tambah Data
                </Button>
             </Col>
          </Row>
          <Container fluid="lg" className='rounded bg-white p-3 mt-4'>
-            <Table hover responsive="sm" className='rounded'>
+            <Table responsive="sm" className='rounded'>
                <thead>
                   <tr>
                      <th className='text-center'>Id</th>
@@ -111,7 +112,7 @@ function App() {
                      <th className='text-center'>Nama Latin</th>
                      <th className='text-center'>Khasiat</th>
                      <th className='text-center'>Bagian digunakan</th>
-                     <th colSpan={2} className='text-center'>Aksi</th>
+                     <th colSpan={3} className='text-center'>Aksi</th>
                   </tr>
                </thead>
                <tbody>
@@ -121,13 +122,16 @@ function App() {
                            <td className='text-center align-middle'>{t.id}</td>
                            <td className='text-center align-middle'>{t.nama}</td>
                            <td className='text-center align-middle'>{t.namaLatin}</td>
-                           <td className='text-center align-middle'>{t.khasiat}</td>
-                           <td className='text-center align-middle'>{t.bagianYangDigunakan}</td>
-                           <td className='text-end'>
-                              <Button variant='light' onClick={() => handleShowModal('edit', t.id)}>Edit</Button>
+                           <td className='text-center align-middle'>{t.khasiat[0].deskripsi}</td>
+                           <td className='text-center align-middle'>{t.bagianYangDigunakan[0].bagian}</td>
+                           <td>
+                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleShowModal('detail', '', t.id)}>Detail</Button>
                            </td>
                            <td>
-                              <Button variant='light' onClick={() => handleDelete(t.id)}>Delete</Button>
+                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleShowModal('data', 'edit', t.id)}>Edit</Button>
+                           </td>
+                           <td>
+                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleDelete(t.id)}>Delete</Button>
                            </td>
                         </tr>
                      ))
@@ -140,12 +144,15 @@ function App() {
             </Table>
          </Container>
 
-         <ModalCenter show={showModal} feature={modalType} onHide={() => handleCloseModal()}>
-            {modalType === "Tambah Data" ? (
-               <AddDataModal></AddDataModal>
-            ) : (
-               <EditDataModal id={Id}></EditDataModal>
-            )}
+         <ModalCenter show={showModal == 'data'} feature={modalType} onHide={() => handleCloseModal()}>
+            {modalType === "Tambah Data" ?
+               <AddDataModal /> :
+               <EditDataModal id={Id} />
+            }
+         </ModalCenter>
+
+         <ModalCenter show={showModal == 'detail'} feature='Detail Tanaman' onHide={() => handleCloseModal()}>
+            <DetailModal id={Id}></DetailModal>
          </ModalCenter>
       </Container>
    )
