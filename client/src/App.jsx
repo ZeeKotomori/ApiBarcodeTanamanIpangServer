@@ -14,11 +14,14 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
+import Toast from 'react-bootstrap/Toast';
+import ToastContainer from 'react-bootstrap/ToastContainer';
 
 function App() {
    const [tanaman, setTanaman] = useState([]);
    const [Id, setId] = useState('');
-   const [showModal, setShowModal] = useState(null);
+   const [showModal, setShowModal] = useState(false);
+   const [showToast, setShowToast] = useState(false);
    const [modalType, setModalType] = useState("");
    const [query, setQuery] = useState('');
 
@@ -33,13 +36,13 @@ function App() {
    }
 
    const fetchAPI = async (query) => {
-      const urls = query ? `${import.meta.env.VITE_API_URL}/api/tanaman/${query}` : `${import.meta.env.VITE_API_URL}/api/tanaman`;
+      const url = query ? `${import.meta.env.VITE_API_URL}/api/tanaman/search?nama=${query}` : `${import.meta.env.VITE_API_URL}/api/tanaman`;
 
       await axios
-         .get(urls)
+         .get(url)
          .then((res) => {
-            console.log(res.data.data);
-            setTanaman(Array.isArray(res.data.data) ? res.data.data : [res.data.data]);
+            console.log(res.data);
+            setTanaman(Array.isArray(res.data) ? res.data : [res.data]);
          })
          .catch((err) => {
             console.log(err.response.data);
@@ -75,6 +78,7 @@ function App() {
                      <a
                         href="#logout"
                         className="link-offset-2 link-offset-3-hover link-underline-dark link-underline-opacity-0 link-underline-opacity-75-hover"
+                        onClick={() => setShowToast(true)}
                      >
                         Log Out
                      </a>
@@ -82,21 +86,22 @@ function App() {
                </Navbar.Collapse>
             </Container>
          </Navbar>
-         <Row className='mt-4'>
+         <Row className='mt-4 justify-content-between'>
             <Form as={Col} xs={4}>
                <Form.Control
-                  placeholder="Cari Tanaman"
+                  placeholder="Cari Nama Tanaman"
                   name='search'
                   value={query}
                   type="search"
+                  autoComplete='off'
                   onChange={(e) => setQuery(e.target.value)}
                />
             </Form>
-            <Col>
+            {/* <Col>
                <Button type="submit" className='bg-primary'>
                   Cari
                </Button>
-            </Col>
+            </Col> */}
             <Col xs='auto'>
                <Button variant='primary' onClick={() => handleShowModal('data', 'Tambah Data')}>
                   Tambah Data
@@ -107,7 +112,7 @@ function App() {
             <Table responsive="sm" className='rounded'>
                <thead>
                   <tr>
-                     <th className='text-center'>Id</th>
+                     <th className='text-center'>#</th>
                      <th className='text-center'>Nama Tanaman</th>
                      <th className='text-center'>Nama Latin</th>
                      <th className='text-center'>Khasiat</th>
@@ -119,25 +124,34 @@ function App() {
                   {tanaman.length > 0 ? (
                      tanaman.map((t, index) => (
                         <tr key={index}>
-                           <td className='text-center align-middle'>{t.id}</td>
+                           <td className='text-center align-middle'>{index + 1}</td>
                            <td className='text-center align-middle'>{t.nama}</td>
                            <td className='text-center align-middle'>{t.namaLatin}</td>
                            <td className='text-center align-middle'>{t.khasiat[0].deskripsi}</td>
                            <td className='text-center align-middle'>{t.bagianYangDigunakan[0].bagian}</td>
-                           <td>
-                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleShowModal('detail', '', t.id)}>Detail</Button>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleShowModal('detail', '', t.id)}>Detail</Button>
                            </td>
-                           <td>
-                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleShowModal('data', 'edit', t.id)}>Edit</Button>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleShowModal('data', 'edit', t.id)}>Edit</Button>
                            </td>
-                           <td>
-                              <Button style={{ width: '100%' }} variant='light' onClick={() => handleDelete(t.id)}>Delete</Button>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleDelete(t.id)}>Delete</Button>
                            </td>
                         </tr>
                      ))
                   ) : (
                      <tr>
-                        <td colSpan={6}>Data tidak ditemukan</td>
+                        <td colSpan={6} className='text-center'>Data tidak ditemukan</td>
                      </tr>
                   )}
                </tbody>
@@ -154,6 +168,15 @@ function App() {
          <ModalCenter show={showModal == 'detail'} feature='Detail Tanaman' onHide={() => handleCloseModal()}>
             <DetailModal id={Id}></DetailModal>
          </ModalCenter>
+
+         <ToastContainer className='p-3' position='top-center' style={{ zIndex: 1 }}>
+            <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
+               <Toast.Header>
+                  <strong className="me-auto">Informasi!</strong>
+               </Toast.Header>
+               <Toast.Body>Fitur berjalan saat perilisan penuh</Toast.Body>
+            </Toast>
+         </ToastContainer>
       </Container>
    )
 }
