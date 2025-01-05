@@ -61,11 +61,11 @@ export default function EditDataModal({ id }) {
         }
 
         const formData = new FormData();
-        formData.append('file', file);
         formData.append('nama', textData.nama);
         formData.append('namaLatin', textData.namaLatin);
         formData.append('khasiat', textData.khasiat[0].deskripsi);
         formData.append('bagianYangDigunakan', textData.bagianYangDigunakan[0].bagian);
+        formData.append('file', file);
 
         axios
             .put(`${import.meta.env.VITE_API_URL}/api/tanaman/${id}`, formData)
@@ -76,7 +76,7 @@ export default function EditDataModal({ id }) {
                 console.error('Terjadi Kesalahan : ', err);
                 alert('Terjadi kesalahan saat mengirim form!');
             });
-        console.log("Submit");
+        window.location.reload();
     }
 
     return (
