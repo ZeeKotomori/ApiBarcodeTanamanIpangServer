@@ -1,8 +1,13 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from "react-router";
 import App from './App.jsx'
-import 'bulma/css/bulma.min.css';
+import QrCard from './components/cards/QrCard.jsx';
 
 createRoot(document.getElementById('root')).render(
-   <App />
+   <BrowserRouter>
+      <Routes>
+         <Route path="/" element={<App />} />
+         <Route path='/print/:file' element={<QrCard />} />
+      </Routes>
+   </BrowserRouter>
 )

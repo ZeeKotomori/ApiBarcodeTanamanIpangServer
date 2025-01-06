@@ -6,7 +6,8 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
 export default function AddDataModal() {
-    const [formData, setFormData] = useState({
+    const [file, setFile] = useState(null)
+    const [textData, setTextData] = useState({
         nama: '',
         namaLatin: '',
         khasiat: '',
@@ -15,33 +16,47 @@ export default function AddDataModal() {
 
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData({
-            ...formData,
+        setTextData({
+            ...textData,
             [name]: value,
         });
     };
 
-    const handleSubmit = () => {
-        axios
-            .post("http://localhost:3001/api/tanaman", formData)
+    const handleImage = (e) => {
+        setFile(e.target.files[0])
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!file) {
+            alert('Tolong isi file!');
+            return;
+        }
+
+        const formData = new FormData();
+        appendFormData(formData, textData);
+        formData.append('file', file);
+
+        await axios
+            .post(`${import.meta.env.VITE_API_URL}/api/tanaman`, formData)
             .then((res) => {
                 console.log('Data berhasil dikirim : ', res.data);
             })
             .catch((err) => {
-                console.error('Terjadi Kesalahan : ', err);
-                alert('Terjadi kesalahan saat mengirim form!');
+                console.error('Terjadi Kesalahan : ', err.response.data);
+                alert(err.response.data.message);
             });
-        console.log("Submit");
+        window.location.reload();
     }
 
     return (
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} encType="multipart/form-data">
             <Form.Group className="mb-3" controlId="formGroupNama">
                 <Form.Label>Nama Tanaman</Form.Label>
                 <Form.Control
                     autoComplete="off"
                     type="text" name='nama'
-                    value={formData.nama}
+                    value={textData.nama}
                     onChange={handleChange}
                     placeholder="Mawar"
                     autoFocus
@@ -53,7 +68,7 @@ export default function AddDataModal() {
                     autoComplete="off"
                     type="text"
                     name='namaLatin'
-                    value={formData.namaLatin}
+                    value={textData.namaLatin}
                     onChange={handleChange}
                     placeholder="Rosa" />
             </Form.Group>
@@ -63,7 +78,7 @@ export default function AddDataModal() {
                     autoComplete="off"
                     type="text"
                     name='khasiat'
-                    value={formData.khasiat}
+                    value={textData.khasiat}
                     onChange={handleChange}
                     placeholder="Meredakan Nyeri Punggung" />
             </Form.Group>
@@ -73,9 +88,15 @@ export default function AddDataModal() {
                     autoComplete="off"
                     type="text"
                     name='bagianYangDigunakan'
-                    value={formData.bagianYangDigunakan}
+                    value={textData.bagianYangDigunakan}
                     onChange={handleChange}
                     placeholder="Batang" />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formGroupGambar">
+                <Form.Label>Gambar</Form.Label>
+                <Form.Control
+                    type="file"
+                    onChange={handleImage} />
             </Form.Group>
             <Button type="submit" variant='primary'>
                 Tambah
@@ -83,3 +104,10 @@ export default function AddDataModal() {
         </Form>
     )
 }
+
+// Fungsi untuk mengisi textData ke formData
+const appendFormData = (formData, fields) => {
+    for (const [key, value] of Object.entries(fields)) {
+        formData.append(key, value);
+    }
+};

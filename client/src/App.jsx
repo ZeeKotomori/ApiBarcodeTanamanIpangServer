@@ -1,22 +1,47 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import Modal from './components/modals/Modal';
-import AddData from './components/modals/AddData';
+import ModalCenter from './components/modals/ModalCenter'
+import AddDataModal from './components/modals/AddDataModal';
+import EditDataModal from './components/modals/EditDataModal';
+import DetailModal from './components/modals/DetailModal';
+
+// Bootstrap
+import './styles/scss/custom.scss';
+import Container from 'react-bootstrap/Container';
+import Form from 'react-bootstrap/Form';
+import Navbar from 'react-bootstrap/Navbar';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
+import Table from 'react-bootstrap/Table';
+import Toast from 'react-bootstrap/Toast';
+import ToastContainer from 'react-bootstrap/ToastContainer';
 
 function App() {
    const [tanaman, setTanaman] = useState([]);
-   const [isActive, setIsActive] = useState(false);
+   const [Id, setId] = useState('');
+   const [showModal, setShowModal] = useState(false);
+   const [showToast, setShowToast] = useState(false);
+   const [modalType, setModalType] = useState("");
    const [query, setQuery] = useState('');
 
-   const openModal = () => setIsActive(true);
-   const closeModal = () => setIsActive(false);
+   const handleShowModal = (idModal, type, idData) => {
+      idData && setId(idData);
+      setModalType(type);
+      setShowModal(idModal);
+   }
 
-   const fetchAPI = (query) => {
-      const url = query ? `http://localhost:3001/api/tanaman/${query}` : "http://localhost:3001/api/tanaman";
+   const handleCloseModal = () => {
+      setShowModal(false);
+   }
 
-      axios
+   const fetchAPI = async (query) => {
+      const url = query ? `${import.meta.env.VITE_API_URL}/api/tanaman/search?nama=${query}` : `${import.meta.env.VITE_API_URL}/api/tanaman`;
+
+      await axios
          .get(url)
          .then((res) => {
+            console.log(res.data);
             setTanaman(Array.isArray(res.data) ? res.data : [res.data]);
          })
          .catch((err) => {
@@ -27,7 +52,7 @@ function App() {
 
    const handleDelete = (id) => {
       axios
-         .delete(`http://localhost:3001/api/tanaman/${id}`)
+         .delete(`${import.meta.env.VITE_API_URL}/api/tanaman/${id}`)
          .then(() => {
             alert('Data Berhasil Dihapus!');
             fetchAPI();
@@ -44,57 +69,115 @@ function App() {
    }, [query]);
 
    return (
-      <div className="container mt-4">
-         <nav className="panel is-primary">
-            <p className="panel-heading">Tanaman Ipang</p>
-            <div className="panel-block">
-               <p className="control">
-                  <input
-                     className="input"
-                     name='search'
-                     value={query}
-                     type="number"
-                     onChange={(e) => setQuery(e.target.value)}
-                     placeholder="Cari berdasarkan Id" />
-               </p>
-            </div>
-            <div className='panel-block'>
-               <button className='button is-primary' onClick={openModal}>Tambah Data</button>
-            </div>
-            <table className="table is-fullwidth is-hoverable">
+      <Container fluid="lg" className='pt-4'>
+         <Navbar className="bg-white rounded">
+            <Container fluid="lg">
+               <Navbar.Brand href="#">Tanaman Ipang</Navbar.Brand>
+               <Navbar.Collapse className="justify-content-end">
+                  <Navbar.Text>
+                     <a
+                        href="#logout"
+                        className="link-offset-2 link-offset-3-hover link-underline-dark link-underline-opacity-0 link-underline-opacity-75-hover"
+                        onClick={() => setShowToast(true)}
+                     >
+                        Log Out
+                     </a>
+                  </Navbar.Text>
+               </Navbar.Collapse>
+            </Container>
+         </Navbar>
+         <Row className='mt-4 justify-content-between'>
+            <Form as={Col} xs={4}>
+               <Form.Control
+                  placeholder="Cari Nama Tanaman"
+                  name='search'
+                  value={query}
+                  type="search"
+                  autoComplete='off'
+                  onChange={(e) => setQuery(e.target.value)}
+               />
+            </Form>
+            {/* <Col>
+               <Button type="submit" className='bg-primary'>
+                  Cari
+               </Button>
+            </Col> */}
+            <Col xs='auto'>
+               <Button variant='primary' onClick={() => handleShowModal('data', 'Tambah Data')}>
+                  Tambah Data
+               </Button>
+            </Col>
+         </Row>
+         <Container fluid="lg" className='rounded bg-white p-3 mt-4'>
+            <Table responsive="sm" className='rounded'>
                <thead>
                   <tr>
-                     <th>Id</th>
-                     <th>Nama Tanaman</th>
-                     <th>Nama Latin</th>
-                     <th>Khasiat</th>
-                     <th colSpan={2} className='has-text-centered'>Action</th>
+                     <th className='text-center'>#</th>
+                     <th className='text-center'>Nama Tanaman</th>
+                     <th className='text-center'>Nama Latin</th>
+                     <th className='text-center'>Khasiat</th>
+                     <th className='text-center'>Bagian digunakan</th>
+                     <th colSpan={3} className='text-center'>Aksi</th>
                   </tr>
                </thead>
                <tbody>
                   {tanaman.length > 0 ? (
                      tanaman.map((t, index) => (
                         <tr key={index}>
-                           <td className='is-vcentered'>{t.id}</td>
-                           <td className='is-vcentered'>{t.nama}</td>
-                           <td className='is-vcentered'>{t.namaLatin}</td>
-                           <td className='is-vcentered'>{t.khasiat}</td>
-                           <td><button className="button is-info is-pulled-right">Edit</button></td>
-                           <td><button className="button is-danger" onClick={() => handleDelete(t.id)}>Delete</button></td>
+                           <td className='text-center align-middle'>{index + 1}</td>
+                           <td className='text-center align-middle'>{t.nama}</td>
+                           <td className='text-center align-middle'>{t.namaLatin}</td>
+                           <td className='text-center align-middle'>{t.khasiat[0].deskripsi}</td>
+                           <td className='text-center align-middle'>{t.bagianYangDigunakan[0].bagian}</td>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleShowModal('detail', '', t.id)}>Detail</Button>
+                           </td>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleShowModal('data', 'edit', t.id)}>Edit</Button>
+                           </td>
+                           <td className='align-middle'>
+                              <Button
+                                 style={{ width: '100%' }}
+                                 variant='light'
+                                 onClick={() => handleDelete(t.id)}>Delete</Button>
+                           </td>
                         </tr>
                      ))
                   ) : (
                      <tr>
-                        <td colSpan={5}>Data tidak ditemukan</td>
+                        <td colSpan={6} className='text-center'>Data tidak ditemukan</td>
                      </tr>
                   )}
                </tbody>
-            </table>
-         </nav>
-         <Modal isActive={isActive} closeModal={closeModal}>
-            <AddData />
-         </Modal>
-      </div>
+            </Table>
+         </Container>
+
+         <ModalCenter show={showModal == 'data'} feature={modalType} onHide={() => handleCloseModal()}>
+            {modalType === "Tambah Data" ?
+               <AddDataModal /> :
+               <EditDataModal id={Id} />
+            }
+         </ModalCenter>
+
+         <ModalCenter show={showModal == 'detail'} feature='Detail Tanaman' onHide={() => handleCloseModal()}>
+            <DetailModal id={Id}></DetailModal>
+         </ModalCenter>
+
+         <ToastContainer className='p-3' position='top-center' style={{ zIndex: 1 }}>
+            <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide>
+               <Toast.Header>
+                  <strong className="me-auto">Informasi!</strong>
+               </Toast.Header>
+               <Toast.Body>Fitur berjalan saat perilisan penuh</Toast.Body>
+            </Toast>
+         </ToastContainer>
+      </Container>
    )
 }
 
